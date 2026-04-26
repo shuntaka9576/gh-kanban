@@ -1,33 +1,44 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"io"
 	"os"
-	"strings"
 
-	"github.com/shuntaka9576/kanban/cmd/kanban/cmd"
-	"github.com/spf13/cobra"
+	"github.com/alecthomas/kong"
+	"github.com/shuntaka9576/kanban/internal/cli"
+)
+
+var (
+	Version   = "dev"
+	BuildDate = ""
 )
 
 func main() {
-	hasDebug := os.Getenv("DEBUG") != ""
+	versionString := Version
+	if BuildDate != "" {
+		versionString = fmt.Sprintf("%s (%s)", Version, BuildDate)
+	}
 
-	if cmd, err := cmd.RootCmd.ExecuteC(); err != nil {
-		printError(os.Stderr, err, cmd, hasDebug)
+	var root cli.CLI
+	parser, err := kong.New(&root,
+		kong.Name("gh-kanban"),
+		kong.Description("GitHub Projects v2 TUI – run `gh kanban view -u USER -p TITLE` to open a board."),
+		kong.UsageOnError(),
+		kong.Vars{"version": versionString},
+	)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
-}
 
-func printError(out io.Writer, err error, command *cobra.Command, debug bool) {
-	fmt.Fprintln(out, err)
+	ctx, err := parser.Parse(os.Args[1:])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 
-	var flagError cmd.FlagError
-	if errors.As(err, &flagError) || strings.HasPrefix(err.Error(), "unknown command ") {
-		if !strings.HasSuffix(err.Error(), "\n") {
-			fmt.Fprintln(out)
-		}
-		fmt.Fprintln(out, command.UsageString())
+	if err := ctx.Run(); err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
 	}
 }
