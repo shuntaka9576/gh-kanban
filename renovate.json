@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Asia/Tokyo",
+  "dependencyDashboard": false,
+  "ignoreTests": true,
+  "automerge": false,
+  "major": {
+    "enabled": true
+  },
+  "minimumReleaseAge": "1 day",
+  "rangeStrategy": "bump",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["at any time"]
+  },
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch", "minor", "major"],
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "Group GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    },
+    {
+      "description": "Group Go modules",
+      "matchManagers": ["gomod"],
+      "groupName": "go-modules"
+    }
+  ]
+}
