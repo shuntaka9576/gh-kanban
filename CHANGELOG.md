@@ -2,6 +2,8 @@
 
 ## [v0.2.1](https://github.com/shuntaka9576/kanban/compare/v0.2.0...v0.2.1) - 2026-04-27
 
+## [v0.2.1](https://github.com/shuntaka9576/kanban/compare/v0.2.0...v0.2.1) - 2026-04-27
+
 ## [v0.2.0](https://github.com/shuntaka9576/kanban/compare/v0.1.5...v0.2.0) - 2026-04-27
 - feat: rewrite as gh extension for Projects v2 with bubbletea TUI by @shuntaka9576 in https://github.com/shuntaka9576/kanban/pull/5
 - ci: introduce tagpr and unify workflow file extensions by @shuntaka9576 in https://github.com/shuntaka9576/kanban/pull/6
