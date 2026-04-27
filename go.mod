@@ -1,26 +1,40 @@
 module github.com/shuntaka9576/kanban
 
-go 1.13
+go 1.25.0
 
 require (
-	github.com/MichaelMure/go-term-markdown v0.1.3
-	github.com/alecthomas/chroma v0.7.2-0.20200304075647-34d9c7143bf5 // indirect
-	github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 // indirect
-	github.com/dlclark/regexp2 v1.2.0 // indirect
-	github.com/gdamore/tcell v1.3.0
-	github.com/google/go-github v17.0.0+incompatible
-	github.com/google/go-querystring v1.0.0 // indirect
-	github.com/kyokomi/emoji v2.2.2+incompatible // indirect
-	github.com/mattn/go-colorable v0.1.6 // indirect
-	github.com/mattn/go-runewidth v0.0.9 // indirect
-	github.com/mitchellh/go-homedir v1.1.0
-	github.com/rivo/tview v0.0.0-20200414130344-8e06c826b3a5
-	github.com/spf13/cobra v1.0.0
-	github.com/spf13/pflag v1.0.5
-	golang.org/x/net v0.0.0-20200219183655-46282727080f // indirect
-	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
-	golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3 // indirect
-	gopkg.in/kyokomi/emoji.v1 v1.5.1
-	gopkg.in/yaml.v2 v2.2.8 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+	github.com/alecthomas/kong v0.9.0
+	github.com/atotto/clipboard v0.1.4
+	github.com/charmbracelet/bubbletea v1.3.10
+	github.com/charmbracelet/lipgloss v1.1.1-0.20250319133953-166f707985bc
+	github.com/cli/go-gh/v2 v2.13.0
+	github.com/google/go-cmp v0.7.0
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
+)
+
+require (
+	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
+	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
+	github.com/charmbracelet/x/ansi v0.10.1 // indirect
+	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
+	github.com/charmbracelet/x/term v0.2.1 // indirect
+	github.com/cli/safeexec v1.0.0 // indirect
+	github.com/cli/shurcooL-graphql v0.0.4 // indirect
+	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
+	github.com/henvic/httpretty v0.0.6 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-localereader v0.0.1 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
+	github.com/muesli/cancelreader v0.2.2 // indirect
+	github.com/muesli/termenv v0.16.0 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
+	github.com/thlib/go-timezone-local v0.0.0-20210907160436-ef149e42d28e // indirect
+	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
+	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/term v0.30.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
