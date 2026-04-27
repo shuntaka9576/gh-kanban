@@ -1,5 +1,3 @@
-![release](https://github.com/shuntaka9576/gh-kanban/workflows/release/badge.svg)
-
 # gh-kanban
 
 A terminal kanban viewer for **GitHub Projects v2**, distributed as a [`gh` CLI](https://cli.github.com/) extension.
