@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.3.1](https://github.com/shuntaka9576/gh-kanban/compare/v0.3.0...v0.3.1) - 2026-04-27
+- ci: tune Renovate for Go modules and GitHub Actions by @renovate[bot] in https://github.com/shuntaka9576/gh-kanban/pull/12
+- chore(deps): update github-actions to v6 (major) by @renovate[bot] in https://github.com/shuntaka9576/gh-kanban/pull/15
+- chore(deps): update dependency go to v1.26.2 - autoclosed by @renovate[bot] in https://github.com/shuntaka9576/gh-kanban/pull/14
+
 ## [v0.3.0](https://github.com/shuntaka9576/gh-kanban/compare/v0.2.1...v0.3.0) - 2026-04-27
 - feat: auto-detect owner from current repo and add interactive project picker by @shuntaka9576 in https://github.com/shuntaka9576/gh-kanban/pull/11
 
