@@ -62,46 +62,121 @@ func (m Model) View() string {
 		return ""
 	}
 
-	if m.err != nil {
-		return errorStyle.Render(fmt.Sprintf("Error: %v", m.err)) + "\n" + helpView()
-	}
+	// Always render the same skeleton (title / board / body / footer). Empty
+	// states show a placeholder so the user sees the frame at t=0 and the
+	// async progress is reported in the bottom-right footer cell.
 
-	if m.project == nil {
-		title := m.summary.Title
-		if title == "" {
-			title = "project"
-		}
-		spin := spinnerFrames[m.spinnerFrame%len(spinnerFrames)]
-		msg := fmt.Sprintf("%s  Loading %q (#%d) from GitHub...", spin, title, m.summary.Number)
-		return msg + "\n" + helpView()
-	}
-
-	if len(m.columns) == 0 {
-		return helpStyle.Render("No items found.") + "\n" + helpView()
-	}
-
-	// Layout budget. Sections joined with "\n" so 3 separators between 4 sections.
 	boardLines := m.height - titleLines - bodyTotal - helpLines - 3
 	if boardLines < minBoardH {
 		boardLines = minBoardH
 	}
 
-	header := titleStyle.Render(fmt.Sprintf("%s  #%d", m.project.Title, m.project.Number))
-	if m.loading {
-		spin := spinnerFrames[m.spinnerFrame%len(spinnerFrames)]
-		header += "  " + mutedStyle.Render(spin+" reloading…")
-	}
-	if m.yanking != "" {
-		spin := spinnerFrames[m.spinnerFrame%len(spinnerFrames)]
-		header += "  " + mutedStyle.Render(spin+" yanking…")
-	}
-	if m.status != "" {
-		header += "  " + mutedStyle.Render(m.status)
-	}
-	board := m.renderBoard(boardLines)
-	body := m.renderBody(bodyTotal)
+	header := m.renderHeader()
 
-	return strings.Join([]string{header, board, body, helpView()}, "\n")
+	var board string
+	if m.bootstrapped && m.project != nil && len(m.columns) > 0 {
+		board = m.renderBoard(boardLines)
+	} else {
+		board = m.renderBoardPlaceholder(boardLines)
+	}
+
+	body := m.renderBody(bodyTotal)
+	footer := m.renderFooter()
+
+	return strings.Join([]string{header, board, body, footer}, "\n")
+}
+
+func (m Model) renderHeader() string {
+	if m.project != nil {
+		return titleStyle.Render(fmt.Sprintf("%s  #%d", m.project.Title, m.project.Number))
+	}
+	label := m.specLabel
+	if label == "" {
+		label = "project"
+	}
+	return titleStyle.Render(label)
+}
+
+func (m Model) renderBoardPlaceholder(boardLines int) string {
+	width := m.width - 2
+	if width < 20 {
+		width = 20
+	}
+	contentH := boardLines - 2
+	if contentH < 3 {
+		contentH = 3
+	}
+
+	var msg string
+	if m.err != nil {
+		msg = fmt.Sprintf("Error: %v", m.err)
+	} else if !m.bootstrapped {
+		label := m.specLabel
+		if label == "" {
+			label = "project"
+		}
+		msg = "Resolving " + label + "…"
+	} else {
+		msg = "No items in this project."
+	}
+
+	body := lipgloss.Place(width, contentH, lipgloss.Center, lipgloss.Center, mutedStyle.Render(msg))
+	return columnStyle.Width(width).Render(body)
+}
+
+func (m Model) statusMessage() string {
+	if m.err != nil {
+		return errorStyle.Render(fmt.Sprintf("⚠ %v", m.err))
+	}
+	spin := spinnerFrames[m.spinnerFrame%len(spinnerFrames)]
+	switch {
+	case !m.bootstrapped:
+		return mutedStyle.Render(spin + " resolving project from GitHub…")
+	case m.yanking != "":
+		return mutedStyle.Render(spin + " yanking…")
+	case m.paginating:
+		return mutedStyle.Render(spin + " " + progressLabel(m.loadedItems, m.totalItems))
+	case m.status != "":
+		return mutedStyle.Render(m.status)
+	default:
+		return mutedStyle.Render(fmt.Sprintf("✓ ready · %d items", m.loadedItems))
+	}
+}
+
+func progressLabel(loaded, total int) string {
+	if total <= 0 || loaded >= total {
+		return fmt.Sprintf("loaded %d items, fetching more…", loaded)
+	}
+	pct := loaded * 100 / total
+	return fmt.Sprintf("loaded %d / %d items (%d%%)", loaded, total, pct)
+}
+
+func (m Model) renderFooter() string {
+	help := helpText()
+	status := m.statusMessage()
+
+	width := m.width
+	if width <= 0 {
+		return helpStyle.Render(help)
+	}
+
+	helpW := lipgloss.Width(help)
+	statusW := lipgloss.Width(status)
+
+	// If they fit on one line, place help left and status right with a gap.
+	if helpW+statusW+1 <= width {
+		gap := width - helpW - statusW
+		if gap < 1 {
+			gap = 1
+		}
+		return helpStyle.Render(help) + strings.Repeat(" ", gap) + status
+	}
+	// Narrow terminal: drop the help text in favour of the status line.
+	return lipgloss.PlaceHorizontal(width, lipgloss.Right, status)
+}
+
+func helpText() string {
+	return "h/l col  j/k cursor  n/b move  o open  O project  y yank-md  R reload  q quit"
 }
 
 func (m Model) renderBoard(boardLines int) string {
@@ -320,9 +395,4 @@ func firstLine(s string) string {
 	return s
 }
 
-func helpView() string {
-	return helpStyle.Render(
-		"h/l col  j/k cursor  n/b move  o open  O project  y yank-md  R reload  q quit",
-	)
-}
 

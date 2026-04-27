@@ -24,14 +24,19 @@ gh extension upgrade kanban
 ## Usage
 
 ```bash
-# user-owned project
-gh kanban view -u <USER>  -p "<PROJECT TITLE>"
+# by project title (server-side search, exact title match)
+gh kanban view -u <USER> -p "<PROJECT TITLE>"
+gh kanban view -o <ORG>  -p "<PROJECT TITLE>"
 
-# org-owned project
-gh kanban view -o <ORG>   -p "<PROJECT TITLE>"
+# by project number (one round-trip, fastest)
+gh kanban view -o <ORG> -N 2
 ```
 
-`-u` / `-o` are mutually exclusive. The project title is matched exactly; if not found, available titles for the owner are printed.
+`-u` / `-o` are mutually exclusive. `-p` and `-N` are mutually exclusive — pick whichever you have at hand. Specifying `-N` skips the title search and goes straight to `projectV2(number:)`, so it lights up faster when you already know the number.
+
+### Loading behaviour
+
+The TUI starts immediately — the alt-screen and a spinner are visible from `t=0`. The first 100 items render as soon as GitHub responds; if the project has more, follow-up pages stream in incrementally and the column counters tick up. While paging is in flight the header shows `loaded N items, fetching more…`.
 
 ### Key bindings
 

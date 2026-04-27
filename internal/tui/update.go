@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,9 +11,18 @@ import (
 	"github.com/shuntaka9576/kanban/internal/gh"
 )
 
-type projectLoadedMsg struct {
-	project *gh.Project
-	err     error
+type bootstrapMsg struct {
+	project    *gh.Project
+	nextCursor string
+	totalItems int
+	err        error
+}
+
+type itemsPageMsg struct {
+	items      []gh.Item
+	nextCursor string
+	totalItems int
+	err        error
 }
 
 type itemMovedMsg struct {
@@ -45,24 +55,41 @@ func clearStatusAfter(d time.Duration) tea.Cmd {
 	return tea.Tick(d, func(time.Time) tea.Msg { return clearStatusMsg{} })
 }
 
-func loadProjectCmd(client *gh.Client, projectID string) tea.Cmd {
+var errNoStatusField = errors.New("project has no Status SingleSelect field; gh-kanban requires it")
+
+func bootstrapCmd(client *gh.Client, spec gh.ProjectSpec) tea.Cmd {
 	return func() tea.Msg {
-		p, err := client.FetchProjectBoard(projectID)
-		if err == nil && p != nil && p.Status.ID == "" {
-			err = errNoStatusField
+		res, err := client.BootstrapBySpec(spec)
+		if err != nil {
+			return bootstrapMsg{err: err}
 		}
-		return projectLoadedMsg{project: p, err: err}
+		if res.Project != nil && res.Project.Status.ID == "" {
+			return bootstrapMsg{err: errNoStatusField}
+		}
+		return bootstrapMsg{
+			project:    res.Project,
+			nextCursor: res.NextCursor,
+			totalItems: res.TotalItems,
+		}
 	}
 }
 
-var errNoStatusField = errStatusField("project has no Status SingleSelect field; gh-kanban requires it")
-
-type errStatusField string
-
-func (e errStatusField) Error() string { return string(e) }
+func fetchItemsPageCmd(client *gh.Client, projectID, statusFieldID, cursor string) tea.Cmd {
+	return func() tea.Msg {
+		page, err := client.FetchItemsPage(projectID, statusFieldID, cursor)
+		if err != nil {
+			return itemsPageMsg{err: err}
+		}
+		return itemsPageMsg{
+			items:      page.Items,
+			nextCursor: page.NextCursor,
+			totalItems: page.TotalItems,
+		}
+	}
+}
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(loadProjectCmd(m.client, m.summary.ID), tickCmd())
+	return tea.Batch(bootstrapCmd(m.client, m.spec), tickCmd())
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -72,20 +99,50 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tickMsg:
-		if m.loading || m.yanking != "" {
+		if !m.bootstrapped || m.paginating || m.yanking != "" {
 			m.spinnerFrame++
 			return m, tickCmd()
 		}
 		return m, nil
 
-	case projectLoadedMsg:
-		m.loading = false
+	case bootstrapMsg:
 		if msg.err != nil {
 			m.err = msg.err
+			m.bootstrapped = true // unblock keys; user can quit/refresh
+			m.paginating = false
 			return m, nil
 		}
 		m.err = nil
+		m.bootstrapped = true
 		m.setProject(msg.project)
+		m.nextCursor = msg.nextCursor
+		m.totalItems = msg.totalItems
+		if m.nextCursor != "" {
+			m.paginating = true
+			return m, tea.Batch(
+				fetchItemsPageCmd(m.client, m.project.ID, m.project.Status.ID, m.nextCursor),
+				tickCmd(),
+			)
+		}
+		m.paginating = false
+		return m, nil
+
+	case itemsPageMsg:
+		if msg.err != nil {
+			m.err = msg.err
+			m.paginating = false
+			return m, nil
+		}
+		m.appendItems(msg.items)
+		m.nextCursor = msg.nextCursor
+		if msg.totalItems > 0 {
+			m.totalItems = msg.totalItems
+		}
+		if m.nextCursor != "" && m.project != nil {
+			m.paginating = true
+			return m, fetchItemsPageCmd(m.client, m.project.ID, m.project.Status.ID, m.nextCursor)
+		}
+		m.paginating = false
 		return m, nil
 
 	case itemMovedMsg:
@@ -127,7 +184,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.refresh()
 	}
 
-	if m.loading || len(m.columns) == 0 {
+	if !m.bootstrapped || len(m.columns) == 0 {
 		return m, nil
 	}
 
@@ -237,13 +294,15 @@ func (m Model) yankItem() (tea.Model, tea.Cmd) {
 }
 
 func (m Model) refresh() (tea.Model, tea.Cmd) {
-	projectID := m.summary.ID
-	if projectID == "" && m.project != nil {
-		projectID = m.project.ID
-	}
-	if projectID == "" {
-		return m, nil
-	}
-	m.loading = true
-	return m, tea.Batch(loadProjectCmd(m.client, projectID), tickCmd())
+	// Wipe board state but keep spec/specLabel so the loading view shows.
+	m.project = nil
+	m.columns = nil
+	m.focusCol = 0
+	m.bootstrapped = false
+	m.paginating = false
+	m.nextCursor = ""
+	m.loadedItems = 0
+	m.totalItems = 0
+	m.err = nil
+	return m, tea.Batch(bootstrapCmd(m.client, m.spec), tickCmd())
 }

@@ -15,13 +15,18 @@ type column struct {
 
 type Model struct {
 	client       *gh.Client
-	summary      gh.ProjectSummary
+	spec         gh.ProjectSpec
+	specLabel    string // human-friendly project label for the loading view (e.g. "Sprint Backlog" or "#2")
 	project      *gh.Project
 	columns      []column
 	focusCol     int
 	width        int
 	height       int
-	loading      bool
+	bootstrapped bool   // first page has been merged
+	paginating   bool   // a follow-up items page is in flight
+	nextCursor   string // cursor for the next items page (empty == no more)
+	loadedItems  int    // total items currently held in columns
+	totalItems   int    // ProjectV2.items.totalCount reported by GitHub
 	spinnerFrame int
 	movingItem   string
 	yanking      string
@@ -29,11 +34,11 @@ type Model struct {
 	err          error
 }
 
-func New(client *gh.Client, summary gh.ProjectSummary) Model {
+func New(client *gh.Client, spec gh.ProjectSpec, specLabel string) Model {
 	return Model{
-		client:  client,
-		summary: summary,
-		loading: true,
+		client:    client,
+		spec:      spec,
+		specLabel: specLabel,
 	}
 }
 
@@ -43,6 +48,49 @@ func (m *Model) setProject(p *gh.Project) {
 	if m.focusCol >= len(m.columns) {
 		m.focusCol = 0
 	}
+	if p == nil {
+		m.loadedItems = 0
+		return
+	}
+	m.loadedItems = len(p.Items)
+}
+
+func (m *Model) appendItems(items []gh.Item) {
+	if len(items) == 0 || m.project == nil {
+		return
+	}
+	m.project.Items = append(m.project.Items, items...)
+
+	knownOption := make(map[string]int, len(m.columns))
+	noStatusIdx := -1
+	for i, col := range m.columns {
+		if col.optionID == noStatusOptionID {
+			noStatusIdx = i
+			continue
+		}
+		knownOption[col.optionID] = i
+	}
+
+	known := make(map[string]struct{}, len(m.project.Status.Options))
+	for _, opt := range m.project.Status.Options {
+		known[opt.ID] = struct{}{}
+	}
+
+	for _, item := range items {
+		if idx, ok := knownOption[item.StatusOptionID]; ok && item.StatusOptionID != noStatusOptionID {
+			m.columns[idx].items = append(m.columns[idx].items, item)
+			continue
+		}
+		// item belongs to "No Status" — either it has no value, or its option
+		// is not declared on the project (deleted). Lazily create the column.
+		if noStatusIdx == -1 {
+			m.columns = append(m.columns, column{optionID: noStatusOptionID, name: "No Status"})
+			noStatusIdx = len(m.columns) - 1
+		}
+		m.columns[noStatusIdx].items = append(m.columns[noStatusIdx].items, item)
+	}
+
+	m.loadedItems += len(items)
 }
 
 func buildColumns(p *gh.Project) []column {
