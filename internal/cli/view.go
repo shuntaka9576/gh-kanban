@@ -17,17 +17,23 @@ type ViewCmd struct {
 }
 
 func (c *ViewCmd) Run() error {
-	if c.Project == "" && c.Number == 0 {
-		return errors.New("specify --project/-p TITLE or --number/-N N")
-	}
 	if c.Project != "" && c.Number != 0 {
 		return errors.New("--project and --number are mutually exclusive")
 	}
 
-	client, err := gh.NewClient(gh.InitParams{
+	params := gh.InitParams{
 		UserLogin: c.User,
 		OrgLogin:  c.Org,
-	})
+	}
+	if params.UserLogin == "" && params.OrgLogin == "" {
+		detected, err := gh.DetectOwnerFromCurrentRepo()
+		if err != nil {
+			return fmt.Errorf("could not auto-detect owner from current repository (%w); specify --user/-u or --org/-o", err)
+		}
+		params = detected
+	}
+
+	client, err := gh.NewClient(params)
 	if err != nil {
 		if errors.Is(err, gh.ErrInvalidClientType) {
 			return errors.New("specify exactly one of --user/-u or --org/-o")
@@ -39,6 +45,30 @@ func (c *ViewCmd) Run() error {
 		Title:  c.Project,
 		Number: c.Number,
 	}
+
+	if spec.Title == "" && spec.Number == 0 {
+		projects, err := client.ListProjects()
+		if err != nil {
+			return fmt.Errorf("list projects: %w", err)
+		}
+		switch len(projects) {
+		case 0:
+			fmt.Printf("No projects found for %s.\n", client.Login)
+			return nil
+		case 1:
+			spec.Number = projects[0].Number
+		default:
+			sel, err := pickProject(projects)
+			if err != nil {
+				return err
+			}
+			if sel == nil {
+				return nil
+			}
+			spec.Number = sel.Number
+		}
+	}
+
 	label := specLabel(spec)
 
 	model := tui.New(client, spec, label)
