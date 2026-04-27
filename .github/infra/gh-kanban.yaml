@@ -1,7 +1,7 @@
 apiVersion: gh-infra/v1
 kind: Repository
 metadata:
-  name: kanban
+  name: gh-kanban
   owner: shuntaka9576
 spec:
   description: ":octocat: Simple terminal UI for GitHub Project"

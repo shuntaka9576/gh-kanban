@@ -1,10 +1,10 @@
-![release](https://github.com/shuntaka9576/kanban/workflows/release/badge.svg)
+![release](https://github.com/shuntaka9576/gh-kanban/workflows/release/badge.svg)
 
 # gh-kanban
 
 A terminal kanban viewer for **GitHub Projects v2**, distributed as a [`gh` CLI](https://cli.github.com/) extension.
 
-![gif](https://github.com/shuntaka9576/kanban/blob/main/doc/gif/kanban.gif?raw=true)
+![gif](https://github.com/shuntaka9576/gh-kanban/blob/main/doc/gif/kanban.gif?raw=true)
 
 > The original `kanban` was a TUI for the now-retired GitHub Projects (Classic). This rewrite targets Projects v2, ships as a `gh` extension, and is built on top of [`cli/go-gh`](https://github.com/cli/go-gh) and [`charmbracelet/bubbletea`](https://github.com/charmbracelet/bubbletea).
 
@@ -12,13 +12,13 @@ A terminal kanban viewer for **GitHub Projects v2**, distributed as a [`gh` CLI]
 
 ```bash
 gh auth login --scopes 'project'
-gh extension install shuntaka9576/kanban
+gh extension install shuntaka9576/gh-kanban
 ```
 
 Upgrade:
 
 ```bash
-gh extension upgrade kanban
+gh extension upgrade gh-kanban
 ```
 
 ## Usage
