@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/shuntaka9576/kanban/internal/gh"
 	"github.com/shuntaka9576/kanban/internal/tui"
 )
@@ -72,7 +72,7 @@ func (c *ViewCmd) Run() error {
 	label := specLabel(spec)
 
 	model := tui.New(client, spec, label)
-	program := tea.NewProgram(model, tea.WithAltScreen())
+	program := tea.NewProgram(model)
 	if _, err := program.Run(); err != nil {
 		return err
 	}
