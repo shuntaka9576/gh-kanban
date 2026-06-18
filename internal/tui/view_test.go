@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/shuntaka9576/kanban/internal/gh"
 )
 
@@ -17,7 +17,7 @@ func newSizedModel(t *testing.T, w, h int) Model {
 
 func TestView_LoadingState(t *testing.T) {
 	m := newSizedModel(t, 120, 40)
-	got := m.View()
+	got := m.View().Content
 	if got == "" {
 		t.Fatal("loading view returned empty string")
 	}
@@ -61,7 +61,7 @@ func TestView_RendersBoardAfterLoad(t *testing.T) {
 	}
 
 	out, _ := m.Update(bootstrapMsg{project: project})
-	got := out.(Model).View()
+	got := out.(Model).View().Content
 
 	for _, want := range []string{"Sample Project", "Todo (1)", "Doing (1)", "Done (1)", "investigate xyz"} {
 		if !strings.Contains(got, want) {
@@ -83,7 +83,7 @@ func TestView_PaginationBadgeWhilePaging(t *testing.T) {
 	// Bootstrap reports totalCount=4, so the footer should show progress as
 	// "1 / 4 items (25%)" while paginating.
 	out, _ := m.Update(bootstrapMsg{project: project, nextCursor: "CUR", totalItems: 4})
-	got := out.(Model).View()
+	got := out.(Model).View().Content
 
 	if !strings.Contains(got, "1 / 4 items (25%)") {
 		t.Fatalf("expected percentage progress 'loaded 1 / 4 items (25%%)' in footer; view:\n%s", got)
@@ -178,7 +178,7 @@ func TestView_RendersOverflowIndicators(t *testing.T) {
 	}
 
 	out, _ := m.Update(bootstrapMsg{project: project})
-	got := out.(Model).View()
+	got := out.(Model).View().Content
 
 	if !strings.Contains(got, "more") {
 		t.Fatalf("expected '+ N more' indicator when items exceed visible rows. View:\n%s", got)
