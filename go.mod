@@ -1,6 +1,6 @@
 module github.com/shuntaka9576/kanban
 
-go 1.26.2
+go 1.26.4
 
 require (
 	github.com/alecthomas/kong v0.9.0
