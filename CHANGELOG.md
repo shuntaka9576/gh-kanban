@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.3.2](https://github.com/shuntaka9576/gh-kanban/compare/v0.3.1...v0.3.2) - 2026-06-21
+
+- chore(deps): update github-actions to v7 by @renovate[bot] in https://github.com/shuntaka9576/gh-kanban/pull/19
+- chore(deps): update github-actions to v2.2.0 by @renovate[bot] in https://github.com/shuntaka9576/gh-kanban/pull/21
+
 ## [v0.3.1](https://github.com/shuntaka9576/gh-kanban/compare/v0.3.0...v0.3.1) - 2026-06-18
 
 - ci: tune Renovate for Go modules and GitHub Actions by @renovate[bot] in https://github.com/shuntaka9576/gh-kanban/pull/12
